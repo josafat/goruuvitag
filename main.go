@@ -41,9 +41,10 @@ func onStateChanged(d gatt.Device, s gatt.State) {
 }
 
 func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
-	fmt.Printf("\nPeripheral ID:%s, NAME:(%s)\n", p.ID(), p.Name())
-	fmt.Println("  TX Power Level    =", a.TxPowerLevel)
-	ParseRuuviData(a.ManufacturerData, p.ID())
+	if isruuvi := ParseRuuviData(a.ManufacturerData, p.ID()); isruuvi {
+		fmt.Printf("\nPeripheral ID:%s, NAME:(%s)\n", p.ID(), p.Name())
+		fmt.Println("  TX Power Level    =", a.TxPowerLevel)
+	}
 }
 
 func main() {

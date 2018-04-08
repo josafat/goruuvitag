@@ -88,7 +88,7 @@ func parseSensorFormat3(data []byte) *SensorData {
 }
 
 //ParseRuuviData parses ruuvidata
-func ParseRuuviData(data []byte, a string) {
+func ParseRuuviData(data []byte, a string) bool {
 
 	sendData := func(sensorData *SensorData) {
 		sensorData.Address = a
@@ -104,12 +104,16 @@ func ParseRuuviData(data []byte, a string) {
 		fmt.Printf("Ruuvi data with sensor format %d\n", sensorFormat)
 		switch sensorFormat {
 		case 3:
-			sendData(parseSensorFormat3(data))
+			parsedData := parseSensorFormat3(data)
+			sendData(parsedData)
+			fmt.Printf("Data: %#v\n", parsedData)
 		default:
-			fmt.Printf("Unknown sensor format %d", sensorFormat)
+			fmt.Printf("Unknown sensor format %d\n", sensorFormat)
 		}
+		return true
 	} else {
-		fmt.Printf("Not a ruuvi device \n")
+		//fmt.Printf("Not a ruuvi device \n")
+		return false
 	}
 
 }
