@@ -7,13 +7,16 @@ import (
 	"sync"
 	"time"
 
+	"github.com/patrickmn/go-cache"
 	"github.com/paypal/gatt"
 	"github.com/paypal/gatt/examples/option"
 )
 
+var influxClient *InfluxDBClient
+var deviceCache *cache.Cache
+
 var isPoweredOn = false
 var scanMutex = sync.Mutex{}
-var influxClient *InfluxDBClient
 var Database = "tag_data"
 
 func beginScan(d gatt.Device) {
@@ -48,10 +51,19 @@ func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
 		fmt.Printf("\nPeripheral ID:%s, NAME:(%s)\n", p.ID(), p.Name())
 		fmt.Println("  TX Power Level    =", a.TxPowerLevel)
 
+		_, found := deviceCache.Get(data.Address)
+		if found {
+			log.Printf("Not sending until cache cleaned for %s",
+				data.Address)
+			return
+		}
+
 		if err := influxClient.NewMeasurementPoint(data); err != nil {
 			log.Printf("WARN: failed to write to influx: %s",
 				err.Error())
 		}
+
+		deviceCache.Set(data.Address, "dummy", cache.DefaultExpiration)
 	}
 }
 
@@ -76,6 +88,8 @@ func main() {
 	} else {
 		log.Printf("Failed to parse url: %s", err.Error())
 	}
+
+	deviceCache = cache.New(5*time.Minute, 10*time.Minute)
 
 	// Register handlers.
 	d.Handle(gatt.PeripheralDiscovered(onPeriphDiscovered))
