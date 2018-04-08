@@ -88,7 +88,7 @@ func parseSensorFormat3(data []byte) *SensorData {
 }
 
 //ParseRuuviData parses ruuvidata
-func ParseRuuviData(data []byte, a string) bool {
+func ParseRuuviData(data []byte, a string) (bool, *SensorData) {
 
 	sendData := func(sensorData *SensorData) {
 		sensorData.Address = a
@@ -96,7 +96,6 @@ func ParseRuuviData(data []byte, a string) bool {
 		if httpURL != "" {
 			sendSensorData(sensorData, httpURL)
 		}
-
 	}
 
 	if len(data) == 20 && binary.LittleEndian.Uint16(data[0:2]) == 0x0499 {
@@ -107,13 +106,13 @@ func ParseRuuviData(data []byte, a string) bool {
 			parsedData := parseSensorFormat3(data)
 			sendData(parsedData)
 			fmt.Printf("Data: %#v\n", parsedData)
+			return true, parsedData
 		default:
 			fmt.Printf("Unknown sensor format %d\n", sensorFormat)
 		}
-		return true
 	} else {
 		//fmt.Printf("Not a ruuvi device \n")
-		return false
 	}
+	return false, &SensorData{}
 
 }
