@@ -77,6 +77,7 @@ func main() {
 
 	influxConfig, err := ParseInfluxDBUrl(os.Getenv("INFLUX_URL"), Database)
 	if err == nil {
+		influxConfig.Timeout = 3 * time.Second
 		influxClient, err = NewInfluxDBClient(influxConfig)
 		if err != nil {
 			log.Fatalf("Failed to setup Influxdb client: %s",

@@ -9,10 +9,11 @@ import (
 )
 
 type InfluxDBConfig struct {
-	Url string
+	Url      string
 	Username string
 	Password string
 	Database string
+	Timeout  time.Duration
 }
 
 type InfluxDBClient struct {
@@ -45,6 +46,7 @@ func NewInfluxDBClient(config *InfluxDBConfig) (*InfluxDBClient, error) {
 		Addr:     config.Url,
 		Username: config.Username,
 		Password: config.Password,
+		Timeout:  config.Timeout,
 	})
 	if err != nil {
 		return &InfluxDBClient{}, err
