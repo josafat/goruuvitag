@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/url"
 	"time"
+	"log"
 
 	"github.com/influxdata/influxdb/client/v2"
 )
@@ -60,6 +61,10 @@ func NewInfluxDBClient(config *InfluxDBConfig) (*InfluxDBClient, error) {
 }
 
 func (ic *InfluxDBClient) NewMeasurementPoint(data *SensorData) error {
+	if ic == nil {
+		return nil
+	}
+
 	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
 		Database:  ic.Database,
 		Precision: "s",

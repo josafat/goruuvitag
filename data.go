@@ -100,12 +100,16 @@ func ParseRuuviData(data []byte, a string) (bool, *SensorData) {
 
 	if len(data) == 20 && binary.LittleEndian.Uint16(data[0:2]) == 0x0499 {
 		sensorFormat := data[2]
-		fmt.Printf("Ruuvi data with sensor format %d\n", sensorFormat)
+		if debug {
+			fmt.Printf("Ruuvi data with sensor format %d\n", sensorFormat)
+		}
 		switch sensorFormat {
 		case 3:
 			parsedData := parseSensorFormat3(data)
 			sendData(parsedData)
-			fmt.Printf("Data: %#v\n", parsedData)
+			if debug {
+				fmt.Printf("Data: %#v\n", parsedData)
+			}
 			return true, parsedData
 		default:
 			fmt.Printf("Unknown sensor format %d\n", sensorFormat)

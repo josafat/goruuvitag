@@ -18,6 +18,7 @@ var deviceCache *cache.Cache
 var isPoweredOn = false
 var scanMutex = sync.Mutex{}
 var Database = "tag_data"
+var debug = false
 
 func beginScan(d gatt.Device) {
 	scanMutex.Lock()
@@ -48,22 +49,24 @@ func onStateChanged(d gatt.Device, s gatt.State) {
 
 func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
 	if isruuvi, data := ParseRuuviData(a.ManufacturerData, p.ID()); isruuvi {
-		fmt.Printf("\nPeripheral ID:%s, NAME:(%s)\n", p.ID(), p.Name())
-		fmt.Println("  TX Power Level    =", a.TxPowerLevel)
-
-		_, found := deviceCache.Get(data.Address)
-		if found {
-			log.Printf("Not sending until cache cleaned for %s",
-				data.Address)
-			return
+		if debug {
+			fmt.Printf("\nPeripheral ID:%s, NAME:(%s)\n", p.ID(), p.Name())
+			fmt.Println("  TX Power Level    =", a.TxPowerLevel)
 		}
 
-		if err := influxClient.NewMeasurementPoint(data); err != nil {
-			log.Printf("WARN: failed to write to influx: %s",
-				err.Error())
+		if influxClient != nil {
+			_, found := deviceCache.Get(data.Address)
+			if found {
+				return
+			}
+
+			if err := influxClient.NewMeasurementPoint(data); err != nil {
+				log.Printf("WARN: failed to write to influx: %s",
+					err.Error())
+			}
 		}
 
-		deviceCache.Set(data.Address, "dummy", cache.DefaultExpiration)
+		deviceCache.Set(data.Address, data, cache.DefaultExpiration)
 	}
 }
 
@@ -91,6 +94,18 @@ func main() {
 	}
 
 	deviceCache = cache.New(5*time.Minute, 10*time.Minute)
+
+	restPort := os.Getenv("REST_PORT")
+	if len(restPort) > 0 {
+		restServer, err := NewRestServer(restPort, deviceCache)
+		if err != nil {
+			log.Fatalf("rest server failed: %s",
+				err.Error())
+			return
+		}
+
+		go restServer.Run()
+	}
 
 	// Register handlers.
 	d.Handle(gatt.PeripheralDiscovered(onPeriphDiscovered))
