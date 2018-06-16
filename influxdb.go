@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/url"
 	"time"
-	"log"
 
 	"github.com/influxdata/influxdb/client/v2"
 )

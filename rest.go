@@ -26,8 +26,8 @@ func NewRestServer(port string, deviceCache *cache.Cache) (*RestServer, error) {
 func (rs *RestServer) Run() {
 	log.Printf("starting rest at port %s", rs.Port)
 
-	http.HandleFunc("/", rs.SensorReadHandler)
-	http.HandleFunc("/devices", rs.DevicesHandler)
+	http.HandleFunc("/device", rs.SensorReadHandler)
+	http.HandleFunc("/", rs.DevicesHandler)
 	log.Fatal(http.ListenAndServe(":" + rs.Port, nil))
 }
 
@@ -49,7 +49,7 @@ func (rs *RestServer) DevicesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rs *RestServer) SensorReadHandler(w http.ResponseWriter, r *http.Request) {
-	device := r.URL.Query().Get("device")
+	device := r.URL.Query().Get("id")
 	if device == "" {
 		http.Error(w, "Device not given", http.StatusBadRequest)
 		return
