@@ -20,6 +20,7 @@ type SensorData struct {
 	Humidity      float64
 	Pressure      uint32
 	Battery       uint16
+	BatteryPerc   uint16
 	Address       string
 	AccelerationX int16
 	AccelerationY int16
@@ -69,6 +70,13 @@ func parseTemperature(t uint8, f uint8) float64 {
 	return temp
 }
 
+func batteryPerc(v uint16) uint16 {
+	min := 2450
+	max := 3150
+
+	return uint16(100 * ( int(v) - min ) / (max - min))
+}
+
 func parseSensorFormat3(data []byte) *SensorData {
 	reader := bytes.NewReader(data)
 	result := SensorFormat3{}
@@ -81,6 +89,7 @@ func parseSensorFormat3(data []byte) *SensorData {
 	sensorData.Humidity = float64(result.Humidity) / 2.0
 	sensorData.Pressure = uint32(result.Pressure) + 50000
 	sensorData.Battery = result.BatteryVoltageMv
+	sensorData.BatteryPerc = batteryPerc(result.BatteryVoltageMv)
 	sensorData.AccelerationX = result.AccelerationX
 	sensorData.AccelerationY = result.AccelerationY
 	sensorData.AccelerationZ = result.AccelerationZ
