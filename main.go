@@ -12,7 +12,6 @@ import (
 	"github.com/paypal/gatt/examples/option"
 )
 
-var influxClient *InfluxDBClient
 var deviceCache *cache.Cache
 
 var isPoweredOn = false
@@ -54,18 +53,6 @@ func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
 			fmt.Println("  TX Power Level    =", a.TxPowerLevel)
 		}
 
-		if influxClient != nil {
-			_, found := deviceCache.Get(data.Address)
-			if found {
-				return
-			}
-
-			if err := influxClient.NewMeasurementPoint(data); err != nil {
-				log.Printf("WARN: failed to write to influx: %s",
-					err.Error())
-			}
-		}
-
 		deviceCache.Set(data.Address, data, cache.DefaultExpiration)
 	}
 }
@@ -76,21 +63,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to open device, err: %s\n", err)
 		return
-	}
-
-	influxConfig, err := ParseInfluxDBUrl(os.Getenv("INFLUX_URL"), Database)
-	if err == nil {
-		influxConfig.Timeout = 3 * time.Second
-		influxClient, err = NewInfluxDBClient(influxConfig)
-		if err != nil {
-			log.Fatalf("Failed to setup Influxdb client: %s",
-				err.Error())
-			return
-		}
-
-		log.Printf("Influx client: %#v", influxClient)
-	} else {
-		log.Printf("Failed to parse url: %s", err.Error())
 	}
 
 	deviceCache = cache.New(5*time.Minute, 10*time.Minute)

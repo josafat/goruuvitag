@@ -1,0 +1,11 @@
+[Unit]
+Description=Ruuvitag
+
+[Service]
+Environment=REST_PORT=8080
+ExecStart=/usr/sbin/goruuvitag
+Restart=always
+StandardOutput=null
+
+[Install]
+WantedBy=multi-user.target
