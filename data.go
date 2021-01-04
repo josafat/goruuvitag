@@ -71,8 +71,8 @@ func parseTemperature(t uint8, f uint8) float64 {
 }
 
 func batteryPerc(v uint16) uint16 {
-	min := 2450
-	max := 3150
+	min := 2500
+	max := 3220
 
 	return uint16(100 * ( int(v) - min ) / (max - min))
 }
